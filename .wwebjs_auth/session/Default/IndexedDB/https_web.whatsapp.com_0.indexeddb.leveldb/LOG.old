@@ -1,4 +1,0 @@
-2025/11/29-12:51:15.529 4504 Reusing MANIFEST C:\Users\eduar\OneDrive\Área de Trabalho\HyperLoaders\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/11/29-12:51:15.529 4504 Recovering log #133
-2025/11/29-12:51:15.602 4504 Reusing old log C:\Users\eduar\OneDrive\Área de Trabalho\HyperLoaders\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000133.log 
-2025/11/29-12:51:17.139 3940 Manual compaction at level-0 from '\x00 \x00\x00\x00' @ 72057594037927935 : 1 .. '\x00!\x00\x00\x00' @ 0 : 0; will stop at (end)
