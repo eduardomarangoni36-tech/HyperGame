@@ -1,6 +1,6 @@
 const { Client } = require('whatsapp-web.js');
 const express = require('express');
-const qrcode = require('qrcode');
+const qrcode = require('qrcode'); // Só uma vez!
 
 const app = express();
 const client = new Client({
