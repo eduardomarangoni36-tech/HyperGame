@@ -2,65 +2,63 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 
 const client = new Client({
-    authStrategy: new LocalAuth()
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox'
+        ]
+    }
 });
 
 client.on('qr', (qr) => {
     qrcode.generate(qr, { small: true });
-    console.log('Escaneie o QR code acima com o WhatsApp!');
+    // Se quiser salvar como imagem, descomente abaixo:
+    // const QRCode = require('qrcode');
+    // QRCode.toFile('qrcode.png', qr, function (err) {
+    //     if (err) throw err;
+    //     console.log('QR code salvo como qrcode.png');
+    // });
 });
 
 client.on('ready', () => {
-    console.log('Cliente está pronto!');
+    console.log('Bot está pronto!');
 });
 
-// Mensagem de boas-vindas e regras
 client.on('group_join', async (notification) => {
     const userId = notification.recipientIds[0];
-    const mentions = [userId];
+    const chat = await client.getChatById(notification.chatId);
 
-    const mensagemBoasVindas = `⚡🚀 Salve @${userId.split('@')[0]}!\nVocê acaba de entrar na zona de potência máxima 🔥\nAqui é onde o grupo Hyperloaders cresce, compartilha e acelera sem limites 💥\nPrepare-se para viver intensidade e união!\n#Hyperloaders #GameOn`;
-    await client.sendMessage(notification.chatId, mensagemBoasVindas, { mentions });
+    // Mensagem de boas-vindas com menção
+    const welcomeText = `👋 Seja bem-vindo(a) @${userId.split('@')[0]} ao grupo Hyperloaders! 🚀\n#Hyperloaders #BemVindo`;
+    await chat.sendMessage(welcomeText, {
+        mentions: [userId]
+    });
 
-    setTimeout(async () => {
-        const regras = `📜 *Regras Hyperloaders*\n` +
-            ` • 🔥 *Respeito sempre*: nada de ofensas, preconceito ou brigas.\n` +
-            ` • ⚡ *Energia positiva*: mantenha o grupo com boas vibrações e motivação.\n` +
-            ` • 🚀 *Conteúdo relevante*: compartilhe coisas que somem à galera (sem spam).\n` +
-            ` • 💥 *Participação ativa*: todos são parte da tropa, então interaja!\n` +
-            ` • 🎯 *Foco no objetivo*: lembre-se que estamos aqui para crescer juntos.\n` +
-            ` • 🛡️ *Privacidade*: não compartilhe informações pessoais sem permissão.\n` +
-            ` • 🌍 *Unidade*: somos Hyperloaders, a força está na união`;
-        await client.sendMessage(notification.chatId, regras);
+    // Aguarda 2 segundos e envia as regras
+    setTimeout(() => {
+        const rules = `📜 *Regras do grupo Hyperloaders:*\n
+1️⃣ Respeite todos os membros.
+2️⃣ Não compartilhe spam.
+3️⃣ Use o grupo para assuntos relacionados ao tema.
+4️⃣ Seja colaborativo!
+🚀 #Hyperloaders #Regras`;
+        chat.sendMessage(rules);
     }, 2000);
 });
 
-// Comandos do grupo
-client.on('message', async (msg) => {
-    const chat = await msg.getChat();
-
-    // Só responde em grupo
-    if (!chat.isGroup) return;
-
+client.on('message', async msg => {
     // Comando /Help
     if (msg.body.toLowerCase() === '/help') {
-        await msg.reply(
-            '📖 *Comandos disponíveis:*\n' +
-            '• /Help - Mostra esta mensagem de ajuda\n' +
-            '• /girar dados - Gera um número aleatório de 1 a 6 e te menciona com o resultado'
-        );
+        msg.reply('🤖 *Comandos disponíveis:*\n/help - Mostra esta mensagem\n/girar dados - Gira um dado de 1 a 6 e te menciona!');
     }
 
     // Comando /girar dados
     if (msg.body.toLowerCase() === '/girar dados') {
-        const userId = msg.author || msg.from; // msg.author para grupos, msg.from para privado
-        const numero = Math.floor(Math.random() * 6) + 1;
-        const mentions = [userId];
-        await client.sendMessage(
-            chat.id._serialized,
-            `🎲 @${userId.split('@')[0]}, você tirou o número *${numero}*!`,
-            { mentions }
-        );
+        const dado = Math.floor(Math.random() * 6) + 1;
+        const mention = [msg.author || msg.from];
+        msg.reply(`🎲 Você tirou: *${dado}*`, undefined, { mentions: mention });
     }
 });
 
