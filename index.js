@@ -1,6 +1,6 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const express = require('express');
-const qrcode = require('qrcode');
+const QRCode = require('qrcode');
 
 const app = express();
 let latestQR = null;
@@ -10,8 +10,11 @@ const client = new Client({
 });
 
 client.on('qr', (qr) => {
-    latestQR = qr;
-    console.log('QR code recebido!');
+    QRCode.toDataURL(qr, function (err, url) {
+        if (err) throw err;
+        require('fs').writeFileSync('qrcode.html', `<img src="${url}">`);
+        console.log('Arquivo qrcode.html gerado. Abra no navegador!');
+    });
 });
 
 app.get('/', async (req, res) => {
