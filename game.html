@@ -2,39 +2,45 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>HyperGame - Tela Cheia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>HyperGame</title>
     <style>
         body, html {
             margin: 0;
             padding: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
             background: #000;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        #game-container { display: none; }
-        canvas { display: block; }
-        #blocker {
+        #game-container {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        #start-message {
             position: absolute;
             top: 0; left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0,0,0,0.95);
-            z-index: 10;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            color: #fff;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: white;
-            text-align: center;
-        }
-        #fullscreenBtn {
-            font-size: 1.5em;
-            padding: 10px 20px;
+            font-size: 2em;
+            font-family: Arial, sans-serif;
+            z-index: 100;
             cursor: pointer;
         }
         /* --- ESTILOS DO JOYSTICK --- */
@@ -57,14 +63,13 @@
             background: rgba(128, 128, 128, 0.5);
             color: white;
             font-size: 2em;
-            user-select: none; /* Impede seleção de texto ao tocar */
+            user-select: none;
             -webkit-user-select: none;
         }
         .joystick-arrows, .joystick-action {
             display: flex;
             gap: 20px;
         }
-        /* Mostra o joystick apenas em dispositivos com tela de toque */
         @media (pointer: coarse) {
             .joystick-container {
                 display: flex;
@@ -76,100 +81,68 @@
     <div id="game-container">
         <canvas id="platformer-canvas"></canvas>
     </div>
-    <div id="blocker">
-        <div style="font-size:1.5em; margin-bottom:20px;">Clique para entrar em tela cheia e jogar.</div>
-        <button id="fullscreenBtn">Entrar em Tela Cheia</button>
-    </div>
+    <div id="start-message">Toque para Iniciar</div>
     <!-- --- HTML DO JOYSTICK --- -->
     <div id="joystick" class="joystick-container">
         <div class="joystick-arrows">
-            <button id="joy-left" class="joy-btn">◀</button>
-            <button id="joy-right" class="joy-btn">▶</button>
+            <button id="joy-left" class="joy-btn\">◀</button>
+            <button id=\"joy-right\" class=\"joy-btn\">▶</button>
         </div>
-        <div class="joystick-action">
-            <button id="joy-up" class="joy-btn">▲</button>
+        <div class=\"joystick-action\">
+            <button id=\"joy-up\" class=\"joy-btn\">▲</button>
         </div>
     </div>
 
-
     <script>
-        // --- LÓGICA DE CONTROLE DE TELA CHEIA ---
         window.onload = function() {
             if (sessionStorage.getItem('fromIndex') !== 'true') {
                 window.location.href = 'index.html';
                 return;
             }
             sessionStorage.removeItem('fromIndex');
-            checkFullscreen();
+
+            const startMessage = document.getElementById('start-message');
+            let gameInitialized = false;
+
+            function initGame() {
+                if (gameInitialized) return;
+                gameInitialized = true;
+
+                startMessage.style.display = 'none';
+                
+                // Tenta esconder a barra de endereço em mobile
+                setTimeout(() => window.scrollTo(0, 1), 100);
+
+                startGame();
+            }
+
+            document.body.addEventListener('click', initGame);
+            document.body.addEventListener('touchstart', initGame);
         };
 
-        const blocker = document.getElementById('blocker');
-        const gameContainer = document.getElementById('game-container');
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        const joystick = document.getElementById('joystick');
-        let gameRunning = false;
-
-        function isFullscreen() { return document.fullscreenElement || document.webkitFullscreenElement; }
-
-        function checkFullscreen() {
-            if (!isFullscreen()) {
-                gameContainer.style.display = 'none';
-                joystick.style.display = 'none'; // Garante que o joystick suma com a tela de bloqueio
-                blocker.style.display = 'flex';
-            } else {
-                gameContainer.style.display = 'block';
-                joystick.style.display = ''; // CORREÇÃO: Remove o estilo inline para que o CSS decida se mostra ou não
-                blocker.style.display = 'none';
-                if (!gameRunning) {
-                    startGame();
-                    gameRunning = true;
-                }
-            }
-        }
-
-        async function requestPageFullscreen() {
-            const el = document.documentElement;
-            try {
-                if (el.requestFullscreen) await el.requestFullscreen();
-                else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
-                
-                // Tenta travar a orientação para retrato em mobile
-                if (screen.orientation && screen.orientation.lock) {
-                    await screen.orientation.lock('portrait');
-                }
-            } catch (err) {
-                console.error(`Erro ao tentar forçar tela cheia ou orientação: ${err.message}`);
-            }
-        }
-
-        fullscreenBtn.onclick = requestPageFullscreen;
-        document.addEventListener('fullscreenchange', checkFullscreen);
-        document.addEventListener('webkitfullscreenchange', checkFullscreen);
-
-        // --- LÓGICA DO JOGO ---
+        // --- LÓGICA DO JOGO (INALTERADA, EXCETO PELA REMOÇÃO DA LÓGICA DE TELA CHEIA) ---
         function startGame() {
             const canvas = document.getElementById('platformer-canvas');
             const ctx = canvas.getContext('2d');
+            
+            // Ajusta o canvas para o tamanho real da janela
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            // --- ESTADO GERAL DO JOGO ---
-            let score = 0;
+            // --- ESTADO GERAL DO JOGO ---\n            let score = 0;
             let stage = 1;
             let lives = 3;
             let gameState = 'platformer'; // 'platformer', 'shooter', ou 'win'
             const groundHeight = 70;
 
-            // --- ASSETS ---
-            const playerImage = new Image();
+            // --- ASSETS ---\n            const playerImage = new Image();
             playerImage.src = 'Sprites/personagem.png';
             const rocketImage = new Image();
             rocketImage.src = 'Sprites/foguete.png';
             const enemyImage = new Image();
             enemyImage.src = 'Sprites/inimigo.png';
 
-            // --- OBJETOS DO JOGO ---
-            const player = {
+            // --- OBJETOS DO JOGO ---\n            const player = {
                 x: 100, y: canvas.height - groundHeight - 100,
                 width: 100, height: 100, speed: 6,
                 dy: 0, gravity: 0.5,
@@ -182,8 +155,7 @@
             let platforms = [], coins = [], enemies = [], rocks = [], bullets = [];
             let shootCooldown = 0, rocksToDestroy = 0, rocksDestroyed = 0;
 
-            // --- FUNÇÕES DE CONTROLE DE JOGO ---
-            function handleDeath() {
+            // --- FUNÇÕES DE CONTROLE DE JOGO ---\n            function handleDeath() {
                 lives--;
                 if (lives <= 0) {
                     alert("Game Over! Reiniciando do começo.");
@@ -208,8 +180,7 @@
                 else { gameState = 'platformer'; generatePlatformerLevel(); }
             }
 
-            // --- FUNÇÕES DE GERAÇÃO DE NÍVEL ---
-            function generatePlatformerLevel() {
+            // --- FUNÇÕES DE GERAÇÃO DE NÍVEL ---\n            function generatePlatformerLevel() {
                 platforms = [], coins = [], enemies = [];
                 player.x = 100;
                 player.y = canvas.height - groundHeight - player.height;
@@ -255,8 +226,7 @@
                 rocket.x = canvas.width / 2 - rocket.width / 2;
             }
 
-            // --- CONTROLES (TECLADO E JOYSTICK) ---
-            const keys = { left: false, right: false, up: false };
+            // --- CONTROLES (TECLADO E JOYSTICK) ---\n            const keys = { left: false, right: false, up: false };
             
             // Teclado
             document.addEventListener('keydown', e => {
@@ -270,8 +240,7 @@
                 if (e.key === 'ArrowUp') keys.up = false;
             });
 
-            // Joystick (Touch e Mouse)
-            const joyLeft = document.getElementById('joy-left');
+            // Joystick (Touch e Mouse)\n            const joyLeft = document.getElementById('joy-left');
             const joyRight = document.getElementById('joy-right');
             const joyUp = document.getElementById('joy-up');
 
@@ -290,8 +259,7 @@
             setupJoyButton(joyUp, 'up');
 
 
-            // --- LÓGICAS DE UPDATE ---
-            function updatePlatformer() {
+            // --- LÓGICAS DE UPDATE ---\n            function updatePlatformer() {
                 if (keys.left) player.x -= player.speed;
                 if (keys.right) player.x += player.speed;
                 if (keys.up && player.onGround) { player.dy = player.jumpPower; player.onGround = false; }
@@ -380,8 +348,7 @@
                 }
             }
 
-            // --- LÓGICAS DE DRAW ---
-            function drawPlatformer() {
+            // --- LÓGICAS DE DRAW ---\n            function drawPlatformer() {
                 ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = 'green'; ctx.fillRect(0, canvas.height - groundHeight, canvas.width, groundHeight);
                 ctx.fillStyle = '#A0522D'; platforms.forEach(p => ctx.fillRect(p.x, p.y, p.width, p.height));
@@ -412,8 +379,7 @@
                 ctx.textAlign = 'left';
             }
 
-            // --- LOOP PRINCIPAL ---
-            function gameLoop() {
+            // --- LOOP PRINCIPAL ---\n            function gameLoop() {
                 if (gameState === 'win') {
                     drawWinScreen();
                     requestAnimationFrame(gameLoop);
@@ -433,8 +399,7 @@
                 requestAnimationFrame(gameLoop);
             }
 
-            // --- INÍCIO ---
-            const allImages = [playerImage, rocketImage, enemyImage];
+            // --- INÍCIO ---\n            const allImages = [playerImage, rocketImage, enemyImage];
             let imagesLoaded = 0;
             allImages.forEach(img => {
                 img.onload = () => {
